@@ -16,6 +16,10 @@ model User{
   id String @id @unique // matches kinde user id
   email String @unique
 
+ // un usuario puede tener varios files
+ // se hace una relacion al modelo de files
+ File  File[]
+
   // datos para la suscripcion de stripe
   stripeCustomerId String? @unique @map(name:"stripe_customer_id")
   stripeSubscriptionId String? @unique @map(name:"stripe_subscription_id")
@@ -23,9 +27,36 @@ model User{
   stripeCurrentPeriodEnd DateTime? @map(name:"stripe_current_period_end")
 }
 
+enum UploadStatus {
+  PENDING
+  PROCESSING
+  FAILED
+  SUCCESS
+}
 
-// comandos de primsa
+model File {
+ id String @id @default(cuid())
+ name String
 
-// npx prisma db push en temrinal
+ uploadStatus UploadStatus @default(PENDING)
+
+ url String
+ key String
+
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ User User? @relation(fields: [userId],references: [id])
+ userId String?
+}
+
+
+
+
+// comandos de prisma
+
+// npx prisma db push                   en terminal
 // manda los modelos que acabas de crear
 
+// npx prisma studio 
+// te abre un deploy local con los datos de tu tabla para que no tengas que usar clientes de mysl o pstgress etc
+// con No relacionales como mongo ellos normalmente tienen ya sus clientes en la nube

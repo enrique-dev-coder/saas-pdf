@@ -13,6 +13,7 @@ const Page = () => {
   const origin = searchParams.get('origins');
   //  const {data,isLoading} = trpc.test.useQuery()
 
+  // estos es un equivalente a llamar la peticion a la api pero usando esta instancia de trpc
   trpc.authCallback.useQuery(undefined, {
     onSuccess: ({ success }) => {
       if (success)
@@ -20,6 +21,7 @@ const Page = () => {
         // la data base se va a creaer en prisma , una herrameinta para crear db dentro de la misma app de next
         // prisma sirve para interactuar con una db de forma mas sencilla
         // la db sera una mysqlcreada en un servicio que se llama planetscale
+        // usaremos primsa como cliente par aver esos dato
         router.push(origin ? `/${origin}` : '/dashboard');
     },
     onError: (error) => {
