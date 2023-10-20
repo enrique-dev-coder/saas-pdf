@@ -2,7 +2,7 @@ import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
 import { privateProcedure, publicProcedure, router } from './trpc';
 import { TRPCError } from '@trpc/server';
 import { db } from '@/db';
-
+import { z } from 'zod';
 // aqui se crean las rutas como los endpoints en un back normal para hacer el objeto de RPC
 export const appRouter = router({
   // test: publicProcedure.query(() => {
@@ -50,6 +50,31 @@ export const appRouter = router({
       },
     });
   }),
+  // el req.body = input
+  // en mutation va la logica de lo que le pasara al input
+  deleteFile: privateProcedure
+    .input(
+      // esta libreria es para tipar las req.boy
+      z.object({ id: z.string() })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+      // buscar el file con el id del file y que haga match con el del usuario
+      const file = await db.file.findFirst({
+        where: {
+          id: input.id,
+          userId,
+        },
+      });
+      if (!file) throw new TRPCError({ code: 'NOT_FOUND' });
+      // despues de pasar los chequeos se borra
+      await db.file.delete({
+        where: {
+          id: input.id,
+        },
+      });
+      return file;
+    }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,19 +1,40 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import UploadButton from './UploadButton';
 import { Button } from './ui/button';
 import { trpc } from '@/app/_trpc/clients';
-import { Ghost, MessageSquare, Plus, Trash } from 'lucide-react';
+import { Ghost, Loader2, MessageSquare, Plus, Trash } from 'lucide-react';
 import Skeleton from 'react-loading-skeleton';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
 const Dashboard = () => {
+  const [currentFileDeleted, setCurrentFileDeleted] = useState<string | null>(
+    null
+  );
+
   // esto es como llamar al endpoint
   // y tRPC ya sabe los tipos de datos que llegna d ela request
   // client side es como hacer un fetch
+  const utils = trpc.useContext();
+
   const { data: files, isLoading } = trpc.getUserFiles.useQuery();
+  // esta funcion de mutate es algo asi como el useState pero se usa el useMutation de rpc
+  // tambien esta cosa trae su onSuccess que es como dar la respuesta positiva de la promesa
+  const { mutate: deleteFile } = trpc.deleteFile.useMutation({
+    onSuccess: () => {
+      // esto es como hacer otra peticion cuando se cambia la data
+      // si usas el redux para estados no es necesario mas peticiones
+      utils.getUserFiles.invalidate();
+    },
+    onMutate({ id }) {
+      setCurrentFileDeleted(id);
+    },
+    onSettled() {
+      setCurrentFileDeleted(null);
+    },
+  });
 
   return (
     <main className="mx-auto max-w-7xl md:p-10 ">
@@ -61,8 +82,17 @@ const Dashboard = () => {
                     <MessageSquare className="h-4 w-4" />
                     mocked
                   </div>
-                  <Button size="sm" className="w-full" variant="destructive">
-                    <Trash className="h-4 w-4" />
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    variant="destructive"
+                    onClick={() => deleteFile({ id: file.id })}
+                  >
+                    {currentFileDeleted === file.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </li>
